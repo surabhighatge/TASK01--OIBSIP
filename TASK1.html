@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+        :root {
+            --background: #f6f6f6;
+            --font: #222;
+            --border: #333;
+            --screen: #eee;
+            --calculator: #aaa;
+            --btn: #eee;
+            --btn-hover: #ddd;
+            --btn-active: #ccc;
+            --btn-red: #faa;
+            --btn-red-hover: #e99;
+            --btn-red-active: #d88;
+            --btn-blue: #aaf;
+            --btn-blue-hover: #99e;
+            --btn-blue-active: #88d;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        html {
+            position: relative;
+            min-height: 100%;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--font);
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin-bottom: 100px;
+        }
+
+        button {
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 75vh;
+            min-height: 500px;
+            padding: 10px;
+            margin-top: 50px;
+        }
+
+        .calculator {
+            width: 400px;
+            border: 2px var(--border) solid;
+            border-radius: 15px;
+            padding: 20px;
+            background-color: var(--calculator);
+        }
+
+        .screen {
+            padding: 10px 20px;
+            border: 2px var(--border) solid;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            background-color: var(--screen);
+            text-align: right;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .screen-last {
+            min-height: 32px;
+            font-size: 20px;
+        }
+
+        .screen-current {
+            min-height: 64px;
+            font-size: 40px;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        .btn {
+            padding: 20px;
+            border: 2px var(--border) solid;
+            border-radius: 5px;
+            background-color: var(--btn);
+            font-size: 20px;
+        }
+
+        .btn:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .btn:active {
+            background-color: var(--btn-active);
+        }
+
+        .btn-red {
+            background-color: var(--btn-red);
+        }
+
+        .btn-red:hover {
+            background-color: var(--btn-red-hover);
+        }
+
+        .btn-red:active {
+            background-color: var(--btn-red-active);
+        }
+
+        .btn-blue {
+            background-color: var(--btn-blue);
+        }
+
+        .btn-blue:hover {
+            background-color: var(--btn-blue-hover);
+        }
+
+        .btn-blue:active {
+            background-color: var(--btn-blue-active);
+        }
+
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <main class="main">
+        <div class="calculator">
+            <div class="screen">
+                <div class="screen-last" id="lastOperationScreen"></div>
+                <div class="screen-current" id="currentOperationScreen">0</div>
+            </div>
+            <div class="buttons-grid">
+                <button class="btn btn-red span-2" id="clearBtn" onclick="this.blur();">CLEAR</button>
+                <button class="btn btn-blue span-2" id="deleteBtn" onclick="this.blur();">DELETE</button>
+                <button class="btn" onclick="this.blur();" data-number>7</button>
+                <button class="btn" onclick="this.blur();" data-number>8</button>
+                <button class="btn" onclick="this.blur();" data-number>9</button>
+                <button class="btn" onclick="this.blur();" data-operator>÷</button>
+
+                <button class="btn" onclick="this.blur();" data-number>4</button>
+                <button class="btn" onclick="this.blur();" data-number>5</button>
+                <button class="btn" onclick="this.blur();" data-number>6</button>
+                <button class="btn" onclick="this.blur();" data-operator>×</button>
+
+                <button class="btn" onclick="this.blur();" data-number>1</button>
+                <button class="btn" onclick="this.blur();" data-number>2</button>
+                <button class="btn" onclick="this.blur();" data-number>3</button>
+                <button class="btn" onclick="this.blur();" data-operator>−</button>
+
+                <button class="btn" onclick="this.blur();" data-number>0</button>
+                <button class="btn" onclick="this.blur();" id="pointBtn">.</button>
+                <button class="btn" onclick="this.blur();" id="equalsBtn">=</button>
+                <button class="btn" onclick="this.blur();" data-operator>+</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const lastOperationScreen = document.getElementById('lastOperationScreen');
+            const currentOperationScreen = document.getElementById('currentOperationScreen');
+            const clearBtn = document.getElementById('clearBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const equalsBtn = document.getElementById('equalsBtn');
+            const pointBtn = document.getElementById('pointBtn');
+            const numberButtons = document.querySelectorAll('[data-number]');
+            const operatorButtons = document.querySelectorAll('[data-operator]');
+
+            let currentOperation = '';
+            let previousOperation = '';
+            let operation = undefined;
+
+            function updateScreen() {
+                currentOperationScreen.textContent = currentOperation;
+                lastOperationScreen.textContent = previousOperation;
+            }
+
+            function appendNumber(number) {
+                if (number === '.' && currentOperation.includes('.')) return;
+                currentOperation = currentOperation.toString() + number.toString();
+            }
+
+            function chooseOperation(op) {
+                if (currentOperation === '') return;
+                if (previousOperation !== '') {
+                    compute();
+                }
+                operation = op;
+                previousOperation = currentOperation;
+                currentOperation = '';
+            }
+
+            function compute() {
+                let computation;
+                const prev = parseFloat(previousOperation);
+                const current = parseFloat(currentOperation);
+                if (isNaN(prev) || isNaN(current)) return;
+                switch (operation) {
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '−':
+                        computation = prev - current;
+                        break;
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    default:
+                        return;
+                }
+                currentOperation = computation;
+                operation = undefined;
+                previousOperation = '';
+            }
+
+            function clear() {
+                currentOperation = '';
+                previousOperation = '';
+                operation = undefined;
+            }
+
+            function deleteNumber() {
+                currentOperation = currentOperation.toString().slice(0, -1);
+            }
+
+            numberButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    appendNumber(button.textContent);
+                    updateScreen();
+                });
+            });
+
+            operatorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    chooseOperation(button.textContent);
+                    updateScreen();
+                });
+            });
+
+            equalsBtn.addEventListener('click', button => {
+                compute();
+                updateScreen();
+            });
+
+            clearBtn.addEventListener('click', button => {
+                clear();
+                updateScreen();
+            });
+
+            deleteBtn.addEventListener('click', button => {
+                deleteNumber();
+                updateScreen();
+            });
+
+            pointBtn.addEventListener('click', button => {
+                appendNumber(button.textContent);
+                updateScreen();
+            });
+        });
+    </script>
+</body>
+</html>
+
